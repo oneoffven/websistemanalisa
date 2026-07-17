@@ -1,18 +1,18 @@
-// State Aplikasi
+// ============================================================
+// STATE
+// ============================================================
 let listPerusahaan = [];
 let deleteTargetId = null;
 
-// Filter, Sort & Pagination State
 let searchTerm = "";
 let selectedWilayah = "";
-let sortOption = ""; // Format: okt-desc, okt-asc, etc.
+let sortOption = "";
 let currentPage = 1;
 const itemsPerPage = 10;
 
-// DOM Elements
+// DOM refs
 const currentDateInfo = document.getElementById('current-date-info');
 
-// Cards DOM
 const cardTotalPerusahaan = document.getElementById('card-total-perusahaan');
 const cardAsetOktober = document.getElementById('card-aset-oktober');
 const cardAsetNovember = document.getElementById('card-aset-november');
@@ -20,7 +20,6 @@ const cardAsetDesember = document.getElementById('card-aset-desember');
 const cardTotalKantor = document.getElementById('card-total-kantor');
 const cardRataRataAset = document.getElementById('card-rata-rata-aset');
 
-// Table & Control DOM
 const tableBody = document.getElementById('table-body');
 const filterSearch = document.getElementById('filter-search');
 const filterWilayah = document.getElementById('filter-wilayah');
@@ -28,7 +27,6 @@ const sortAset = document.getElementById('sort-aset');
 const paginationInfo = document.getElementById('pagination-info');
 const paginationControls = document.getElementById('pagination-controls');
 
-// Form Input DOM
 const formTitle = document.getElementById('form-title');
 const formPerusahaan = document.getElementById('form-perusahaan');
 const formId = document.getElementById('form-id');
@@ -40,373 +38,610 @@ const formAsetDesember = document.getElementById('form-aset-desember');
 const formJumlahKantor = document.getElementById('form-jumlah-kantor');
 const formError = document.getElementById('form-error');
 
-// Form Buttons DOM
 const btnSubmitSimpan = document.getElementById('btn-submit-simpan');
 const btnSubmitUpdate = document.getElementById('btn-submit-update');
 const btnReset = document.getElementById('btn-reset');
 
-// Modal Confirm DOM
 const modalConfirm = document.getElementById('modal-confirm');
 const btnCancelDelete = document.getElementById('btn-cancel-delete');
 const btnConfirmDelete = document.getElementById('btn-confirm-delete');
 
-// --- Helper Functions ---
+const skeletonSummary = document.getElementById('skeleton-summary');
+const summaryCards = document.getElementById('summary-cards');
 
-// Memformat angka ke format mata uang Rupiah
+// ============================================================
+// HELPERS
+// ============================================================
 function formatRupiah(value) {
-  const formatter = new Intl.NumberFormat('id-ID', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  });
+  const formatter = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   return 'Rp ' + formatter.format(value);
 }
 
-function hitungGrowth(awal, akhir) {
-  awal = Number(awal) || 0;
-  akhir = Number(akhir) || 0;
-
-  if (awal === 0) return null;
-
-  return ((akhir - awal) / awal) * 100;
-}
-
-function kategoriGrowth(growth) {
-
-  if (growth === null) return "-";
-
-  if (growth > 5) return "Sangat Baik";
-
-  if (growth >= 2) return "Baik";
-
-  if (growth >= 0) return "Stabil";
-
-  return "Menurun";
-
-}
-
-// Menghapus karakter non-digit untuk konversi input ke angka
 function cleanNumber(str) {
   if (!str) return 0;
   return parseInt(str.toString().replace(/\D/g, '')) || 0;
 }
 
-// Mengatur format ribuan otomatis pada input aset saat mengetik
 function setupCurrencyInput(inputEl) {
   inputEl.addEventListener('input', (e) => {
     let clean = cleanNumber(e.target.value);
-    if (clean === 0) {
-      e.target.value = '';
-    } else {
-      e.target.value = new Intl.NumberFormat('id-ID').format(clean);
-    }
+    if (clean === 0) e.target.value = '';
+    else e.target.value = new Intl.NumberFormat('id-ID').format(clean);
   });
 }
 
-// Update tanggal hari ini di topbar
 function updateDateDisplay() {
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const today = new Date();
-  currentDateInfo.textContent = today.toLocaleDateString('id-ID', options);
+  currentDateInfo.textContent = new Date().toLocaleDateString('id-ID', options);
 }
 
-// --- Modals Controller ---
 function showModal(modalEl) {
-  modalEl.classList.remove('pointer-events-none');
-  modalEl.classList.remove('opacity-0');
+  modalEl.classList.remove('pointer-events-none', 'opacity-0');
   const box = modalEl.firstElementChild;
-  if (box) {
-    box.classList.remove('scale-95');
-    box.classList.add('scale-100');
-  }
+  if (box) { box.classList.remove('scale-95');
+    box.classList.add('scale-100'); }
 }
 
 function hideModal(modalEl) {
-  modalEl.classList.add('pointer-events-none');
-  modalEl.classList.add('opacity-0');
+  modalEl.classList.add('pointer-events-none', 'opacity-0');
   const box = modalEl.firstElementChild;
-  if (box) {
-    box.classList.remove('scale-100');
-    box.classList.add('scale-95');
-  }
+  if (box) { box.classList.remove('scale-100');
+    box.classList.add('scale-95'); }
 }
 
-// --- API Calls & Core Actions ---
-
-// Fetch data dari server
+// ============================================================
+// API
+// ============================================================
 async function fetchPerusahaan() {
   try {
-    tableBody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-400 font-semibold"><span class="inline-block animate-spin mr-2 border-2 border-t-blue-600 border-slate-200 w-4 h-4 rounded-full"></span>Memproses data...</td></tr>`;
+    skeletonSummary.classList.remove('hidden');
+    summaryCards.classList.add('hidden');
+    tableBody.innerHTML =
+      `<tr><td colspan="11" class="py-8 text-center text-slate-400 font-semibold"><span class="inline-block animate-spin mr-2 border-2 border-t-purple-600 border-slate-200 w-4 h-4 rounded-full"></span>Memproses data...</span></td></tr>`;
+
     const res = await fetch('/api/perusahaan');
     if (!res.ok) throw new Error("Gagal memuat data dari database");
     listPerusahaan = await res.json();
-    
-    // Perbarui dropdown filter wilayah secara dinamis
+
+    skeletonSummary.classList.add('hidden');
+    summaryCards.classList.remove('hidden');
+
     populateWilayahDropdown();
-    
-    // Render Dashboard dan Data Tabel
     renderDashboard();
     renderProcessedData();
   } catch (err) {
     console.error(err);
+    skeletonSummary.classList.add('hidden');
+    summaryCards.classList.remove('hidden');
     tableBody.innerHTML = `
-      <tr>
-        <td colspan="8" class="py-8 text-center text-red-500 font-semibold">
+        <tr><td colspan="11" class="py-8 text-center text-rose-500 font-semibold">
           <p class="mb-2">Gagal menyambung ke server database.</p>
-          <button onclick="fetchPerusahaan()" class="px-4 py-2 bg-blue-600 hover:bg-blue-750 text-white rounded-lg text-xs font-bold transition-all shadow-md">Coba Lagi</button>
-        </td>
-      </tr>`;
+          <button onclick="fetchPerusahaan()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition-all shadow-md">Coba Lagi</button>
+        </td></tr>`;
   }
 }
 
-// Isi opsi filter wilayah berdasarkan database secara dinamis
 function populateWilayahDropdown() {
   const currentSelected = filterWilayah.value;
   const wilayahSet = new Set();
-  
-  listPerusahaan.forEach(p => {
-    if (p.wilayah && p.wilayah.trim()) {
-      wilayahSet.add(p.wilayah.trim());
-    }
-  });
-
-  const sortedWilayah = Array.from(wilayahSet).sort();
-  
-  filterWilayah.innerHTML = '<option value="">Semua Wilayah</option>' + 
-    sortedWilayah.map(w => `<option value="${w}">${w}</option>`).join('');
-
-  // Kembalikan seleksi jika wilayah tersebut masih ada
-  if (wilayahSet.has(currentSelected)) {
-    filterWilayah.value = currentSelected;
-  } else {
-    selectedWilayah = "";
-    filterWilayah.value = "";
-  }
+  listPerusahaan.forEach(p => { if (p.wilayah && p.wilayah.trim()) wilayahSet.add(p.wilayah.trim()); });
+  const sorted = Array.from(wilayahSet).sort();
+  filterWilayah.innerHTML = '<option value="">Semua Wilayah</option>' +
+    sorted.map(w => `<option value="${w}">${w}</option>`).join('');
+  if (wilayahSet.has(currentSelected)) filterWilayah.value = currentSelected;
+  else { selectedWilayah = "";
+    filterWilayah.value = ""; }
 }
 
-// Hitung data dan render Dashboard Cards
+// ============================================================
+// DASHBOARD
+// ============================================================
 function renderDashboard() {
-  const totalPerusahaan = listPerusahaan.length;
-  
-  let totalOkt = 0;
-  let totalNov = 0;
-  let totalDes = 0;
-  let totalKantor = 0;
-
+  const total = listPerusahaan.length;
+  let okt = 0,
+    nov = 0,
+    des = 0,
+    kantor = 0;
   listPerusahaan.forEach(p => {
-    totalOkt += Number(p.asetOktober) || 0;
-    totalNov += Number(p.asetNovember) || 0;
-    totalDes += Number(p.asetDesember) || 0;
-    totalKantor += Number(p.jumlahKantor) || 0;
+    okt += Number(p.asetOktober) || 0;
+    nov += Number(p.asetNovember) || 0;
+    des += Number(p.asetDesember) || 0;
+    kantor += Number(p.jumlahKantor) || 0;
   });
+  const totalAset = okt + nov + des;
+  const rata = total > 0 ? totalAset / total : 0;
 
-  const totalAsetSemua = totalOkt + totalNov + totalDes;
-  const rataRata = totalPerusahaan > 0 ? totalAsetSemua / totalPerusahaan : 0;
+  cardTotalPerusahaan.textContent = `${total} Perusahaan`;
+  cardAsetOktober.textContent = formatRupiah(okt);
+  cardAsetNovember.textContent = formatRupiah(nov);
+  cardAsetDesember.textContent = formatRupiah(des);
+  cardTotalKantor.textContent = `${kantor} Kantor`;
+  cardRataRataAset.textContent = formatRupiah(rata);
 
-  // Update DOM Cards
-  cardTotalPerusahaan.textContent = `${totalPerusahaan} Perusahaan`;
-  cardAsetOktober.textContent = formatRupiah(totalOkt);
-  cardAsetNovember.textContent = formatRupiah(totalNov);
-  cardAsetDesember.textContent = formatRupiah(totalDes);
-  cardTotalKantor.textContent = `${totalKantor} Kantor`;
-  cardRataRataAset.textContent = formatRupiah(rataRata);
+  renderGrowthDashboard();
+  renderKantorDashboard();
+  renderTopRanking();
+  renderCharts();
+  renderInsights();
 }
 
-// Proses pemrosesan data: Search -> Filter -> Sort -> Paginate
-function renderProcessedData() {
-  let processed = [...listPerusahaan];
-
-  // 1. SEARCH: Filter berdasarkan nama perusahaan (Case-insensitive)
-  if (searchTerm) {
-    const term = searchTerm.toLowerCase();
-    processed = processed.filter(p => p.perusahaan && p.perusahaan.toLowerCase().includes(term));
-  }
-
-  // 2. FILTER WILAYAH: Saring berdasarkan wilayah terpilih
-  if (selectedWilayah) {
-    processed = processed.filter(p => p.wilayah === selectedWilayah);
-  }
-
-  // 3. SORTING: Urutkan berdasarkan opsi terpilih
-  if (sortOption) {
-    const [column, direction] = sortOption.split('-');
-    const multiplier = direction === 'asc' ? 1 : -1;
-
-    processed.sort((a, b) => {
-      let valA = 0;
-      let valB = 0;
-
-      if (column === 'okt') {
-        valA = a.asetOktober || 0;
-        valB = b.asetOktober || 0;
-      } else if (column === 'nov') {
-        valA = a.asetNovember || 0;
-        valB = b.asetNovember || 0;
-      } else if (column === 'des') {
-        valA = a.asetDesember || 0;
-        valB = b.asetDesember || 0;
-      }
-
-      return (valA - valB) * multiplier;
-    });
-  }
-
-  const totalFilteredItems = processed.length;
-  const totalPages = Math.ceil(totalFilteredItems / itemsPerPage) || 1;
-
-  // Sesuaikan halaman aktif jika berada di luar batas
-  if (currentPage > totalPages) {
-    currentPage = totalPages;
-  }
-
-  // 4. PAGINATION: Ambil potongan data (10 data per halaman)
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalFilteredItems);
-  const paginatedData = processed.slice(startIndex, endIndex);
-
-  // Render baris tabel
-  renderTableRows(paginatedData, startIndex);
-  
-
-  // Render info & kontrol pagination
-  renderPaginationInfo(startIndex, endIndex, totalFilteredItems);
-  renderPaginationControls(totalPages);
+// ============================================================
+// GROWTH
+// ============================================================
+function calculateGrowth(prev, curr) {
+  if (!prev || prev === 0) return null;
+  return ((curr - prev) / prev) * 100;
 }
 
-// Render baris data tabel ke DOM
-function renderTableRows(data, startIndex) {
-  if (data.length === 0) {
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="8" class="py-12 text-center text-slate-400">
-          <div class="flex flex-col items-center justify-center space-y-2">
-            <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <p class="font-medium text-sm">Data tidak ditemukan.</p>
-          </div>
-        </td>
-      </tr>
-    `;
+function getGrowthCategory(growth) {
+  if (growth === null || isNaN(growth) || !isFinite(growth)) {
+    return { label: 'N/A', color: 'gray', bgColor: 'bg-slate-100', textColor: 'text-slate-500' };
+  }
+  if (growth > 5) return { label: 'Sangat Baik', color: 'green', bgColor: 'bg-emerald-100',
+    textColor: 'text-emerald-700' };
+  if (growth >= 2) return { label: 'Baik', color: 'blue', bgColor: 'bg-blue-100',
+  textColor: 'text-blue-700' };
+  if (growth >= 0) return { label: 'Stabil', color: 'yellow', bgColor: 'bg-amber-100',
+    textColor: 'text-amber-700' };
+  return { label: 'Menurun', color: 'red', bgColor: 'bg-red-100', textColor: 'text-red-700' };
+}
+
+function formatGrowth(growth) {
+  if (growth === null || isNaN(growth) || !isFinite(growth)) return '-';
+  const sign = growth > 0 ? '+' : '';
+  return `${sign}${growth.toFixed(1)}%`;
+}
+
+function calculateGrowthStats(data) {
+  let totalOktNov = 0,
+    totalNovDes = 0,
+    countOktNov = 0,
+    countNovDes = 0;
+  const cats = { 'Sangat Baik': { oktNov: 0, novDes: 0 }, 'Baik': { oktNov: 0, novDes: 0 },
+    'Stabil': { oktNov: 0, novDes: 0 }, 'Menurun': { oktNov: 0, novDes: 0 }, 'N/A': { oktNov: 0,
+      novDes: 0 } };
+  data.forEach(p => {
+    const gON = calculateGrowth(Number(p.asetOktober) || 0, Number(p.asetNovember) || 0);
+    const gND = calculateGrowth(Number(p.asetNovember) || 0, Number(p.asetDesember) || 0);
+    if (gON !== null && isFinite(gON)) { totalOktNov += gON;
+      countOktNov++; }
+    if (gND !== null && isFinite(gND)) { totalNovDes += gND;
+      countNovDes++; }
+    cats[getGrowthCategory(gON).label].oktNov++;
+    cats[getGrowthCategory(gND).label].novDes++;
+  });
+  return {
+    avgOktNov: countOktNov > 0 ? totalOktNov / countOktNov : null,
+    avgNovDes: countNovDes > 0 ? totalNovDes / countNovDes : null,
+    categories: cats
+  };
+}
+
+function renderGrowthDashboard() {
+  const stats = calculateGrowthStats(listPerusahaan);
+  const el1 = document.getElementById('card-avg-growth-oktnov');
+  const el2 = document.getElementById('card-avg-growth-novdes');
+  if (el1) {
+    el1.textContent = stats.avgOktNov !== null ? formatGrowth(stats.avgOktNov) : '-';
+    if (stats.avgOktNov !== null) {
+      const cat = getGrowthCategory(stats.avgOktNov);
+      el1.className = `card-value ${cat.textColor}`;
+    }
+  }
+  if (el2) {
+    el2.textContent = stats.avgNovDes !== null ? formatGrowth(stats.avgNovDes) : '-';
+    if (stats.avgNovDes !== null) {
+      const cat = getGrowthCategory(stats.avgNovDes);
+      el2.className = `card-value ${cat.textColor}`;
+    }
+  }
+  document.getElementById('card-sangat-baik-oktnov').textContent = stats.categories['Sangat Baik'].oktNov +
+    ' perusahaan';
+  document.getElementById('card-menurun-oktnov').textContent = stats.categories['Menurun'].oktNov + ' perusahaan';
+  document.getElementById('card-sangat-baik-novdes').textContent = stats.categories['Sangat Baik'].novDes +
+    ' perusahaan';
+  document.getElementById('card-menurun-novdes').textContent = stats.categories['Menurun'].novDes + ' perusahaan';
+}
+
+// ============================================================
+// KANTOR
+// ============================================================
+function getKantorCategory(jumlah) {
+  if (jumlah > 12) return { label: 'Besar', color: 'blue', bgColor: 'bg-blue-100',
+  textColor: 'text-blue-700' };
+  if (jumlah >= 7) return { label: 'Menengah', color: 'yellow', bgColor: 'bg-amber-100',
+    textColor: 'text-amber-700' };
+  return { label: 'Kecil', color: 'gray', bgColor: 'bg-slate-100', textColor: 'text-slate-600' };
+}
+
+function calculateKantorStats(data) {
+  let besar = 0,
+    menengah = 0,
+    kecil = 0;
+  data.forEach(p => {
+    const j = Number(p.jumlahKantor) || 0;
+    if (j > 12) besar++;
+    else if (j >= 7) menengah++;
+    else kecil++;
+  });
+  return { besar, menengah, kecil };
+}
+
+function renderKantorDashboard() {
+  const s = calculateKantorStats(listPerusahaan);
+  document.getElementById('card-kantor-besar').textContent = s.besar + ' perusahaan';
+  document.getElementById('card-kantor-menengah').textContent = s.menengah + ' perusahaan';
+  document.getElementById('card-kantor-kecil').textContent = s.kecil + ' perusahaan';
+}
+
+// ============================================================
+// TOP RANKING (tampilan baru)
+// ============================================================
+function renderTopRanking() {
+  const cBesar = document.getElementById('top-ranking-terbesar');
+  const cKecil = document.getElementById('top-ranking-terkecil');
+  const withData = listPerusahaan.filter(p => (Number(p.asetDesember) || 0) > 0);
+  if (withData.length === 0) {
+    cBesar.innerHTML =
+      `<div class="px-5 py-8 text-center text-slate-400 text-sm">Belum ada data aset Desember.</div>`;
+    cKecil.innerHTML =
+      `<div class="px-5 py-8 text-center text-slate-400 text-sm">Belum ada data aset Desember.</div>`;
     return;
   }
+  const sorted = [...withData].sort((a, b) => (Number(b.asetDesember) || 0) - (Number(a.asetDesember) || 0));
+  const top5 = sorted.slice(0, 5);
+  const bottom5 = sorted.slice(-5).reverse();
 
-  tableBody.innerHTML = data.map((p, idx) => {
-    const globalIndex = startIndex + idx + 1;
+  const renderItem = (item, rank, isTop) => {
+    const cls = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'default';
+    const aset = Number(item.asetDesember) || 0;
     return `
-      <tr class="hover:bg-slate-50 transition-colors duration-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}">
-        <td class="py-4 px-6 text-center font-semibold text-slate-500">${globalIndex}</td>
-        <td class="py-4 px-6 font-bold text-slate-800">${p.perusahaan}</td>
-        <td class="py-4 px-6 text-slate-650">${p.wilayah}</td>
-        <td class="py-4 px-6 text-right font-semibold text-slate-700">${formatRupiah(p.asetOktober)}</td>
-        <td class="py-4 px-6 text-right font-semibold text-slate-700">${formatRupiah(p.asetNovember)}</td>
-        <td class="py-4 px-6 text-right font-semibold text-slate-700">${formatRupiah(p.asetDesember)}</td>
-        <td class="py-4 px-6 text-center">
-${(() => {
-
-    const growth = hitungGrowth(
-        p.asetOktober,
-        p.asetNovember
-    );
-
-    if(growth === null) return "-";
-
-    const warna =
-        growth > 5 ? "text-green-600" :
-        growth >= 2 ? "text-blue-600" :
-        growth >= 0 ? "text-yellow-600" :
-        "text-red-600";
-
-    return `
-        <div class="${warna} font-bold">
-            ${growth.toFixed(2)}%
-        </div>
-
-        <div class="text-xs text-slate-500">
-            ${kategoriGrowth(growth)}
-        </div>
-    `;
-
-})()}
-</td>
-</td>
-        <td class="py-4 px-6 text-center font-semibold text-slate-700">${p.jumlahKantor}</td>
-        <td class="py-4 px-6 text-center">
-          <div class="flex items-center justify-center space-x-2">
-            <button onclick="editData(${p.id})" class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors text-xs font-semibold">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-              <span>Edit</span>
-            </button>
-            <button onclick="confirmHapus(${p.id})" class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-red-200 text-red-650 hover:bg-red-50 transition-colors text-xs font-semibold">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-              <span>Hapus</span>
-            </button>
+        <div class="rank-item flex items-center justify-between px-5 py-3 hover:bg-purple-50/50 transition-colors duration-150">
+          <div class="flex items-center space-x-3 min-w-0">
+            <span class="rank-badge ${cls}">${rank}</span>
+            <div class="min-w-0">
+              <p class="font-bold text-slate-800 text-sm truncate">${item.perusahaan}</p>
+              <p class="text-xs text-slate-400 truncate">${item.wilayah}</p>
+            </div>
           </div>
-        </td>
-      </tr>
-    `;
+          <div class="text-right flex-shrink-0 ml-3">
+            <span class="font-extrabold text-slate-800 text-sm">${formatRupiah(aset)}</span>
+            ${rank === 1 ? (isTop ? '<span class="ml-1.5 text-xs">👑</span>' : '<span class="ml-1.5 text-xs">⚠️</span>') : ''}
+          </div>
+        </div>
+      `;
+  };
+  cBesar.innerHTML = top5.map((p, i) => renderItem(p, i + 1, true)).join('');
+  cKecil.innerHTML = bottom5.map((p, i) => renderItem(p, i + 1, false)).join('');
+}
+
+// ============================================================
+// CHARTS (tetap sama)
+// ============================================================
+function renderCharts() {
+  if (chartTotalAset) { chartTotalAset.destroy();
+    chartTotalAset = null; }
+  if (chartTop10) { chartTop10.destroy();
+    chartTop10 = null; }
+  if (chartWilayah) { chartWilayah.destroy();
+    chartWilayah = null; }
+  if (chartKantor) { chartKantor.destroy();
+    chartKantor = null; }
+  if (listPerusahaan.length === 0) return;
+
+  // Chart 1
+  let okt = 0,
+    nov = 0,
+    des = 0;
+  listPerusahaan.forEach(p => { okt += Number(p.asetOktober) || 0;
+    nov += Number(p.asetNovember) || 0;
+    des += Number(p.asetDesember) || 0; });
+  chartTotalAset = new Chart(document.getElementById('chartTotalAset'), {
+    type: 'bar',
+    data: {
+      labels: ['Oktober 2025', 'November 2025', 'Desember 2025'],
+      datasets: [{ label: 'Total Aset', data: [okt, nov, des],
+        backgroundColor: ['#8b5cf6', '#a78bfa', '#14b8a6'], borderRadius: 6, borderSkipped: false }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: ctx => formatRupiah(ctx.parsed.y) } } },
+      scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rp ' + (v / 1e6).toFixed(1) + 'M' } } } }
+  });
+
+  // Chart 2
+  const sortedByDes = [...listPerusahaan].sort((a, b) => (Number(b.asetDesember) || 0) - (Number(a.asetDesember) || 0));
+  const top10 = sortedByDes.slice(0, 10);
+  chartTop10 = new Chart(document.getElementById('chartTop10'), {
+    type: 'bar',
+    data: {
+      labels: top10.map(p => p.perusahaan),
+      datasets: [{ label: 'Aset Desember 2025', data: top10.map(p => Number(p.asetDesember) || 0),
+        backgroundColor: ['#8b5cf6', '#a78bfa', '#c084fc', '#7c3aed', '#6d28d9', '#14b8a6', '#2dd4bf',
+          '#5eead4', '#f472b6', '#ec4899'
+        ], borderRadius: 6, borderSkipped: false }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: ctx => formatRupiah(ctx.parsed.x) } } },
+      scales: { x: { beginAtZero: true, ticks: { callback: v => 'Rp ' + (v / 1e6).toFixed(1) + 'M' } } } }
+  });
+
+  // Chart 3
+  const wMap = {};
+  listPerusahaan.forEach(p => { const w = p.wilayah || 'Tidak Diketahui';
+    wMap[w] = (wMap[w] || 0) + 1; });
+  chartWilayah = new Chart(document.getElementById('chartWilayah'), {
+    type: 'pie',
+    data: {
+      labels: Object.keys(wMap),
+      datasets: [{ data: Object.values(wMap), backgroundColor: ['#8b5cf6', '#a78bfa', '#14b8a6', '#f59e0b',
+          '#ec4899', '#2dd4bf', '#f472b6'
+        ], borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom',
+          labels: { boxWidth: 12, font: { size: 10 } } } } }
+  });
+
+  // Chart 4
+  const ks = calculateKantorStats(listPerusahaan);
+  chartKantor = new Chart(document.getElementById('chartKantor'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Besar (>12)', 'Menengah (7-12)', 'Kecil (<7)'],
+      datasets: [{ data: [ks.besar, ks.menengah, ks.kecil], backgroundColor: ['#8b5cf6', '#f59e0b',
+          '#94a3b8'
+        ], borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom',
+          labels: { boxWidth: 12, font: { size: 10 } } } } }
+  });
+}
+
+// ============================================================
+// INSIGHT (tampilan baru)
+// ============================================================
+function renderInsights() {
+  const container = document.getElementById('insight-container');
+  if (listPerusahaan.length === 0) {
+    container.innerHTML =
+      `<div class="col-span-full empty-state"><div class="text-4xl mb-3 opacity-50">📭</div><p class="text-slate-600 font-medium text-sm">Belum ada data perusahaan</p><p class="text-slate-400 text-xs mt-1">Tambahkan data melalui form di samping.</p></div>`;
+    return;
+  }
+  const total = listPerusahaan.length;
+  let okt = 0,
+    nov = 0,
+    des = 0;
+  listPerusahaan.forEach(p => { okt += Number(p.asetOktober) || 0;
+    nov += Number(p.asetNovember) || 0;
+    des += Number(p.asetDesember) || 0; });
+  const gON = okt > 0 ? ((nov - okt) / okt) * 100 : null;
+  const gND = nov > 0 ? ((des - nov) / nov) * 100 : null;
+
+  const wMap = {};
+  listPerusahaan.forEach(p => { const w = p.wilayah || 'Tidak Diketahui';
+    wMap[w] = (wMap[w] || 0) + 1; });
+  let wTop = '',
+    wMax = 0;
+  for (const [w, c] of Object.entries(wMap)) { if (c > wMax) { wMax = c;
+      wTop = w; } }
+
+  const sortedByDes = [...listPerusahaan].sort((a, b) => (Number(b.asetDesember) || 0) - (Number(a.asetDesember) || 0));
+  const asetTerbesar = sortedByDes[0];
+  let growthTertinggi = -Infinity,
+    perusahaanGrowth = null;
+  listPerusahaan.forEach(p => {
+    const prev = Number(p.asetNovember) || 0,
+      curr = Number(p.asetDesember) || 0;
+    if (prev > 0) { const g = ((curr - prev) / prev) * 100; if (g > growthTertinggi) { growthTertinggi = g;
+        perusahaanGrowth = p; } }
+  });
+  const totalAset = okt + nov + des;
+  const rata = total > 0 ? totalAset / total : 0;
+  const ks = calculateKantorStats(listPerusahaan);
+
+  const insights = [{
+    icon: '🏢',
+    label: 'Total Perusahaan',
+    value: total + ' perusahaan',
+    sub: 'Data dianalisis',
+    color: 'purple'
+  }, {
+    icon: '📈',
+    label: 'Kenaikan Okt→Nov',
+    value: gON !== null ? (gON > 0 ? '+' : '') + gON.toFixed(1) + '%' : '-',
+    sub: gON !== null ? 'Dari total aset' : 'Data tidak cukup',
+    color: gON !== null ? (gON > 0 ? 'teal' : gON < 0 ? 'rose' : 'amber') : 'slate'
+  }, {
+    icon: '📈',
+    label: 'Kenaikan Nov→Des',
+    value: gND !== null ? (gND > 0 ? '+' : '') + gND.toFixed(1) + '%' : '-',
+    sub: gND !== null ? 'Dari total aset' : 'Data tidak cukup',
+    color: gND !== null ? (gND > 0 ? 'teal' : gND < 0 ? 'rose' : 'amber') : 'slate'
+  }, {
+    icon: '📍',
+    label: 'Wilayah Terbanyak',
+    value: wTop || '-',
+    sub: wMax > 0 ? wMax + ' perusahaan' : 'Tidak ada data',
+    color: 'indigo'
+  }, {
+    icon: '👑',
+    label: 'Aset Terbesar (Des)',
+    value: asetTerbesar ? asetTerbesar.perusahaan : '-',
+    sub: asetTerbesar ? formatRupiah(Number(asetTerbesar.asetDesember) || 0) : 'Tidak ada data',
+    color: 'amber'
+  }, {
+    icon: '🚀',
+    label: 'Growth Tertinggi',
+    value: perusahaanGrowth ? perusahaanGrowth.perusahaan : '-',
+    sub: perusahaanGrowth ? formatGrowth(growthTertinggi) : '-',
+    color: 'teal'
+  }, {
+    icon: '📊',
+    label: 'Rata-rata Aset',
+    value: formatRupiah(rata),
+    sub: 'Seluruh perusahaan',
+    color: 'indigo'
+  }, {
+    icon: '🏗️',
+    label: 'Distribusi Kantor',
+    value: `Besar ${ks.besar}, Menengah ${ks.menengah}, Kecil ${ks.kecil}`,
+    sub: 'Total ' + total + ' perusahaan',
+    color: 'purple'
+  }];
+
+  const colorMap = {
+    purple: { border: 'border-purple-500', bg: 'bg-purple-50/60', icon: 'text-purple-600' },
+    teal: { border: 'border-teal-500', bg: 'bg-teal-50/60', icon: 'text-teal-600' },
+    rose: { border: 'border-rose-500', bg: 'bg-rose-50/60', icon: 'text-rose-600' },
+    amber: { border: 'border-amber-500', bg: 'bg-amber-50/60', icon: 'text-amber-600' },
+    indigo: { border: 'border-indigo-500', bg: 'bg-indigo-50/60', icon: 'text-indigo-600' },
+    slate: { border: 'border-slate-400', bg: 'bg-slate-50/60', icon: 'text-slate-600' }
+  };
+
+  container.innerHTML = insights.map(ins => {
+    const c = colorMap[ins.color] || colorMap.slate;
+    return `
+        <div class="insight-card rounded-xl p-4 shadow-sm ${c.border}">
+          <div class="flex items-start space-x-3">
+            <div class="insight-icon ${c.bg} ${c.icon}">${ins.icon}</div>
+            <div class="flex-1 min-w-0">
+              <div class="insight-label">${ins.label}</div>
+              <div class="insight-value truncate" title="${ins.value}">${ins.value}</div>
+              <div class="insight-sub">${ins.sub}</div>
+            </div>
+          </div>
+        </div>
+      `;
   }).join('');
 }
 
-// Render teks info pagination di bawah tabel
-function renderPaginationInfo(start, end, total) {
-  if (total === 0) {
-    paginationInfo.textContent = "Menampilkan 0–0 dari 0 data";
-  } else {
-    paginationInfo.textContent = `Menampilkan ${start + 1}–${end} dari ${total} data`;
+// ============================================================
+// TABLE & PAGINATION (tampilan baru)
+// ============================================================
+function renderProcessedData() {
+  let processed = [...listPerusahaan];
+  if (searchTerm) { const t = searchTerm.toLowerCase();
+    processed = processed.filter(p => p.perusahaan && p.perusahaan.toLowerCase().includes(t)); }
+  if (selectedWilayah) { processed = processed.filter(p => p.wilayah === selectedWilayah); }
+  if (sortOption) {
+    const [col, dir] = sortOption.split('-');
+    const mult = dir === 'asc' ? 1 : -1;
+    processed.sort((a, b) => {
+      let va = 0,
+        vb = 0;
+      if (col === 'okt') { va = a.asetOktober || 0;
+        vb = b.asetOktober || 0; } else if (col === 'nov') { va = a.asetNovember || 0;
+        vb = b.asetNovember || 0; } else if (col === 'des') { va = a.asetDesember || 0;
+        vb = b.asetDesember || 0; }
+      return (va - vb) * mult;
+    });
   }
+  const totalItems = processed.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * itemsPerPage;
+  const end = Math.min(start + itemsPerPage, totalItems);
+  const pageData = processed.slice(start, end);
+  renderTableRows(pageData, start);
+  renderPaginationInfo(start, end, totalItems);
+  renderPaginationControls(totalPages);
 }
 
-// Render tombol navigasi halaman pagination
+function renderTableRows(data, start) {
+  if (data.length === 0) {
+    tableBody.innerHTML =
+      `<tr><td colspan="11" class="py-12 text-center text-slate-400"><div class="flex flex-col items-center"><svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><p class="font-medium text-sm mt-2">Data tidak ditemukan.</p></div></td></tr>`;
+    return;
+  }
+  tableBody.innerHTML = data.map((p, idx) => {
+    const no = start + idx + 1;
+    const okt = Number(p.asetOktober) || 0,
+      nov = Number(p.asetNovember) || 0,
+      des = Number(p.asetDesember) || 0;
+    const gON = calculateGrowth(okt, nov),
+      gND = calculateGrowth(nov, des);
+    const cON = getGrowthCategory(gON),
+      cND = getGrowthCategory(gND);
+    const kCat = getKantorCategory(Number(p.jumlahKantor) || 0);
+    // Tampilan baru: warna lebih segar, badge lebih modern, tombol dengan gradasi
+    return `
+        <tr class="hover:bg-purple-50/50 transition-colors duration-150 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}">
+          <td class="py-3 px-4 text-center font-semibold text-slate-500">${no}</td>
+          <td class="py-3 px-4 font-bold text-slate-800">${p.perusahaan}</td>
+          <td class="py-3 px-4 text-slate-600"><span class="inline-block px-2 py-0.5 rounded-full bg-purple-100/60 text-purple-700 text-xs font-medium">${p.wilayah}</span></td>
+          <td class="py-3 px-4 text-right font-semibold text-slate-700">${formatRupiah(okt)}</td>
+          <td class="py-3 px-4 text-right font-semibold text-slate-700">${formatRupiah(nov)}</td>
+          <td class="py-3 px-4 text-right font-semibold text-slate-700">${formatRupiah(des)}</td>
+          <td class="py-3 px-4 text-center">
+            <span class="font-bold ${cON.textColor}">${formatGrowth(gON)}</span><br>
+            <span class="growth-badge ${cON.bgColor} ${cON.textColor}">${cON.label}</span>
+          </td>
+          <td class="py-3 px-4 text-center">
+            <span class="font-bold ${cND.textColor}">${formatGrowth(gND)}</span><br>
+            <span class="growth-badge ${cND.bgColor} ${cND.textColor}">${cND.label}</span>
+          </td>
+          <td class="py-3 px-4 text-center font-semibold text-slate-700">${p.jumlahKantor}</td>
+          <td class="py-3 px-4 text-center">
+            <span class="kategori-badge ${kCat.bgColor} ${kCat.textColor}">${kCat.label}</span>
+          </td>
+          <td class="py-3 px-4 text-center">
+            <div class="flex items-center justify-center space-x-1.5">
+              <button onclick="editData(${p.no})" class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg border border-purple-200 text-purple-600 hover:bg-purple-50 transition-colors text-xs font-semibold">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                <span>Edit</span>
+              </button>
+              <button onclick="confirmHapus(${p.no})" class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors text-xs font-semibold">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                <span>Hapus</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+  }).join('');
+}
+
+function renderPaginationInfo(start, end, total) {
+  paginationInfo.textContent = total === 0 ? "Menampilkan 0–0 dari 0 data" :
+    `Menampilkan ${start+1}–${end} dari ${total} data`;
+}
+
 function renderPaginationControls(totalPages) {
-  let html = "";
-
-  // Tombol Previous
-  html += `
-    <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${currentPage === 1 ? 'text-slate-300 border-slate-100 bg-slate-50 cursor-not-allowed' : 'text-slate-650 border-slate-200 hover:bg-slate-50'}">
-      Sebelumnya
-    </button>
-  `;
-
-  // Tombol Halaman Angka
-  for (let i = 1; i <= totalPages; i++) {
-    const isActive = i === currentPage;
-    html += `
-      <button onclick="changePage(${i})" class="w-8 h-8 rounded-lg text-xs font-bold transition-all ${isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' : 'border border-slate-200 text-slate-650 hover:bg-slate-50'}">
-        ${i}
+  let html = `
+      <button onclick="changePage(${currentPage-1})" ${currentPage===1?'disabled':''} class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${currentPage===1?'text-slate-300 border-slate-100 bg-slate-50 cursor-not-allowed':'text-slate-600 border-slate-200 hover:bg-slate-50'}">
+        Sebelumnya
       </button>
     `;
+  for (let i = 1; i <= totalPages; i++) {
+    html += `
+        <button onclick="changePage(${i})" class="w-8 h-8 rounded-lg text-xs font-bold transition-all ${i===currentPage?'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md shadow-purple-500/20':'border border-slate-200 text-slate-600 hover:bg-slate-50'}">
+          ${i}
+        </button>
+      `;
   }
-
-  // Tombol Next
   html += `
-    <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${currentPage === totalPages ? 'text-slate-300 border-slate-100 bg-slate-50 cursor-not-allowed' : 'text-slate-650 border-slate-200 hover:bg-slate-50'}">
-      Berikutnya
-    </button>
-  `;
-
+      <button onclick="changePage(${currentPage+1})" ${currentPage===totalPages?'disabled':''} class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${currentPage===totalPages?'text-slate-300 border-slate-100 bg-slate-50 cursor-not-allowed':'text-slate-600 border-slate-200 hover:bg-slate-50'}">
+        Berikutnya
+      </button>
+    `;
   paginationControls.innerHTML = html;
 }
 
-// Mengubah halaman pagination
-window.changePage = function(targetPage) {
-  currentPage = targetPage;
-  renderProcessedData();
-};
+window.changePage = function(target) { currentPage = target;
+  renderProcessedData(); };
 
-// --- CRUD Form Actions ---
-
-// Bersihkan isian form dan reset status
+// ============================================================
+// CRUD (tetap sama)
+// ============================================================
 function resetForm() {
   formPerusahaan.reset();
   formId.value = "";
   formTitle.textContent = "Tambah Data Perusahaan";
   formError.classList.add('hidden');
   formError.textContent = "";
-
-  // Ubah visibilitas tombol
   btnSubmitSimpan.classList.remove('hidden');
   btnSubmitUpdate.classList.add('hidden');
 }
 
-// Fungsi pembantu untuk mengumpulkan dan memvalidasi data form
 function getFormData() {
   const name = formPerusahaanName.value.trim();
   const wilayah = formWilayah.value.trim();
@@ -414,158 +649,94 @@ function getFormData() {
   const nov = cleanNumber(formAsetNovember.value);
   const des = cleanNumber(formAsetDesember.value);
   const kantor = parseInt(formJumlahKantor.value) || 0;
-
   if (!name || !wilayah) {
     formError.textContent = "Nama perusahaan dan wilayah wajib diisi!";
     formError.classList.remove('hidden');
     return null;
   }
-
-  return {
-    perusahaan: name,
-    wilayah: wilayah,
-    asetOktober: okt,
-    asetNovember: nov,
-    asetDesember: des,
-    jumlahKantor: kantor
-  };
+  return { perusahaan: name, wilayah: wilayah, asetOktober: okt, asetNovember: nov, asetDesember: des,
+    jumlahKantor: kantor };
 }
 
-// Jalankan Tambah Data (POST)
 async function submitSimpan() {
   const payload = getFormData();
   if (!payload) return;
-
   try {
-    const res = await fetch('/api/perusahaan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) {
-      const errRes = await res.json();
-      throw new Error(errRes.error || "Gagal menyimpan data ke server");
-    }
-
+    const res = await fetch('/api/perusahaan', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload) });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Gagal menyimpan data ke server"); }
     resetForm();
     await fetchPerusahaan();
-  } catch (err) {
-    formError.textContent = err.message;
-    formError.classList.remove('hidden');
-  }
+  } catch (err) { formError.textContent = err.message;
+    formError.classList.remove('hidden'); }
 }
 
-// Jalankan Update Data (PUT)
 async function submitUpdate() {
   const id = formId.value;
   const payload = getFormData();
   if (!payload || !id) return;
-
   try {
-    const res = await fetch(`/api/perusahaan/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) {
-      const errRes = await res.json();
-      throw new Error(errRes.error || "Gagal memperbarui data");
-    }
-
+    const res = await fetch(`/api/perusahaan/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload) });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Gagal memperbarui data"); }
     resetForm();
     await fetchPerusahaan();
-  } catch (err) {
-    formError.textContent = err.message;
-    formError.classList.remove('hidden');
-  }
+  } catch (err) { formError.textContent = err.message;
+    formError.classList.remove('hidden'); }
 }
 
-// Klik edit di tabel
-window.editData = function(id) {
-  const item = listPerusahaan.find(p => p.id === id);
+window.editData = function(no) {
+  const item = listPerusahaan.find(p => p.no === no);
   if (!item) return;
-
   formTitle.textContent = "Edit Data Perusahaan";
-  formId.value = item.id;
+  formId.value = item.no;
   formPerusahaanName.value = item.perusahaan;
   formWilayah.value = item.wilayah;
   formAsetOktober.value = item.asetOktober ? new Intl.NumberFormat('id-ID').format(item.asetOktober) : '';
   formAsetNovember.value = item.asetNovember ? new Intl.NumberFormat('id-ID').format(item.asetNovember) : '';
   formAsetDesember.value = item.asetDesember ? new Intl.NumberFormat('id-ID').format(item.asetDesember) : '';
   formJumlahKantor.value = item.jumlahKantor;
-
   formError.classList.add('hidden');
-  
-  // Tukar visibilitas tombol
   btnSubmitSimpan.classList.add('hidden');
   btnSubmitUpdate.classList.remove('hidden');
-  
-  // Scroll form ke tampilan pada layar mobile
   formPerusahaan.scrollIntoView({ behavior: 'smooth' });
 };
 
-// Klik Hapus di tabel
-window.confirmHapus = function(id) {
-  deleteTargetId = id;
-  showModal(modalConfirm);
-};
+window.confirmHapus = function(id) { deleteTargetId = id;
+  showModal(modalConfirm); };
 
-// --- Event Listeners ---
+// ============================================================
+// EVENT LISTENERS (tetap sama)
+// ============================================================
+filterSearch.addEventListener('input', (e) => { searchTerm = e.target.value;
+  currentPage = 1;
+  renderProcessedData(); });
+filterWilayah.addEventListener('change', (e) => { selectedWilayah = e.target.value;
+  currentPage = 1;
+  renderProcessedData(); });
+sortAset.addEventListener('change', (e) => { sortOption = e.target.value;
+  renderProcessedData(); });
 
-// Input Search
-filterSearch.addEventListener('input', (e) => {
-  searchTerm = e.target.value;
-  currentPage = 1; // reset ke halaman pertama saat melakukan pencarian
-  renderProcessedData();
-});
-
-// Dropdown Wilayah
-filterWilayah.addEventListener('change', (e) => {
-  selectedWilayah = e.target.value;
-  currentPage = 1; // reset ke halaman pertama
-  renderProcessedData();
-});
-
-// Dropdown Sorting
-sortAset.addEventListener('change', (e) => {
-  sortOption = e.target.value;
-  renderProcessedData();
-});
-
-// Tombol Form
 btnSubmitSimpan.addEventListener('click', submitSimpan);
 btnSubmitUpdate.addEventListener('click', submitUpdate);
 btnReset.addEventListener('click', resetForm);
 
-// Modal Hapus Actions
-btnCancelDelete.addEventListener('click', () => {
-  deleteTargetId = null;
-  hideModal(modalConfirm);
-});
-
+btnCancelDelete.addEventListener('click', () => { deleteTargetId = null;
+  hideModal(modalConfirm); });
 btnConfirmDelete.addEventListener('click', async () => {
   if (!deleteTargetId) return;
   try {
-    const res = await fetch(`/api/perusahaan/${deleteTargetId}`, {
-      method: 'DELETE'
-    });
+    const res = await fetch(`/api/perusahaan/${deleteTargetId}`, { method: 'DELETE' });
     if (!res.ok) throw new Error("Gagal menghapus data dari database");
-    
     hideModal(modalConfirm);
     deleteTargetId = null;
     await fetchPerusahaan();
-  } catch (err) {
-    alert(err.message);
-  }
+  } catch (err) { alert(err.message); }
 });
 
-// Inisialisasi format mata uang saat mengetik
 setupCurrencyInput(formAsetOktober);
 setupCurrencyInput(formAsetNovember);
 setupCurrencyInput(formAsetDesember);
 
-// Inisialisasi Awal Halaman
 updateDateDisplay();
 fetchPerusahaan();

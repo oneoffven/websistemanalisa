@@ -10,9 +10,136 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Tailwind CSS Compiled -->
   <link rel="stylesheet" href="style.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     body {
       font-family: 'Inter', sans-serif;
+    }
+
+    /* Top Ranking Cards */
+    .top-rank-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .top-rank-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    }
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-weight: 800;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .rank-badge.gold {
+      background: #fef3c7;
+      color: #b45309;
+    }
+    .rank-badge.silver {
+      background: #f1f5f9;
+      color: #475569;
+    }
+    .rank-badge.bronze {
+      background: #ffedd5;
+      color: #9a3412;
+    }
+    .rank-badge.default {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    /* Chart Container */
+    .chart-container {
+      position: relative;
+      height: 250px;
+      width: 100%;
+    }
+    .chart-box {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .chart-box:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+    }
+
+    /* Insight Cards */
+    .insight-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border-left: 4px solid;
+    }
+    .insight-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    }
+    .insight-card .insight-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .insight-card .insight-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #94a3b8;
+    }
+    .insight-card .insight-value {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.3;
+    }
+    .insight-card .insight-sub {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    /* Skeleton Loading */
+    .skeleton {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 10px;
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* Empty State */
+    .empty-state-wrapper {
+      background: linear-gradient(145deg, #f8fafc, #f1f5f9);
+      border-radius: 20px;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .empty-state-icon {
+      font-size: 4rem;
+      opacity: 0.5;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 640px) {
+      .insight-card .insight-value {
+        font-size: 0.85rem;
+      }
+      .rank-badge {
+        width: 22px;
+        height: 22px;
+        font-size: 11px;
+      }
+      .top-rank-card {
+        padding: 0.75rem 1rem;
+      }
     }
   </style>
 </head>
@@ -68,7 +195,54 @@
     <div class="flex-1 p-6 md:p-8 overflow-y-auto space-y-8">
       
       <!-- 1. DASHBOARD CARD SUMMARY -->
-      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Skeleton Loading (ditampilkan saat data belum dimuat) -->
+      <div id="skeleton-summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div class="skeleton h-4 w-24"></div>
+            <div class="skeleton h-10 w-10 rounded-xl"></div>
+          </div>
+          <div class="skeleton h-8 w-32"></div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div class="skeleton h-4 w-24"></div>
+            <div class="skeleton h-10 w-10 rounded-xl"></div>
+          </div>
+          <div class="skeleton h-8 w-32"></div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div class="skeleton h-4 w-24"></div>
+            <div class="skeleton h-10 w-10 rounded-xl"></div>
+          </div>
+          <div class="skeleton h-8 w-32"></div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div class="skeleton h-4 w-24"></div>
+            <div class="skeleton h-10 w-10 rounded-xl"></div>
+          </div>
+          <div class="skeleton h-8 w-32"></div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div class="skeleton h-4 w-24"></div>
+            <div class="skeleton h-10 w-10 rounded-xl"></div>
+          </div>
+          <div class="skeleton h-8 w-32"></div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div class="skeleton h-4 w-24"></div>
+            <div class="skeleton h-10 w-10 rounded-xl"></div>
+          </div>
+          <div class="skeleton h-8 w-32"></div>
+        </div>
+      </div>
+
+      <!-- Summary Cards (sembunyikan saat loading) -->
+      <section id="summary-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
         
         <!-- Card 1: Total Perusahaan -->
         <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
@@ -178,7 +352,244 @@
           </div>
         </div>
 
+        <!-- ========== CARD ANALISA PERTUMBUHAN ========== -->
+        <!-- Card 7: Rata-rata Growth Okt→Nov -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+          <div class="absolute -right-4 -bottom-4 text-indigo-50 opacity-10 group-hover:scale-110 transition-transform duration-500">
+            <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          </div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-semibold text-slate-400 uppercase tracking-wide">Rata-rata Growth Okt→Nov</span>
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-extrabold text-slate-900 tracking-tight" id="card-avg-growth-oktnov">
+            -
+          </div>
+        </div>
+
+        <!-- Card 8: Rata-rata Growth Nov→Des -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+          <div class="absolute -right-4 -bottom-4 text-indigo-50 opacity-10 group-hover:scale-110 transition-transform duration-500">
+            <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          </div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-semibold text-slate-400 uppercase tracking-wide">Rata-rata Growth Nov→Des</span>
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-extrabold text-slate-900 tracking-tight" id="card-avg-growth-novdes">
+            -
+          </div>
+        </div>
+
+        <!-- Card 9: Sangat Baik (Okt→Nov) -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+          <div class="absolute -right-4 -bottom-4 text-emerald-50 opacity-10 group-hover:scale-110 transition-transform duration-500">
+            <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-semibold text-slate-400 uppercase tracking-wide">📈 Sangat Baik (Okt→Nov)</span>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-extrabold text-slate-900" id="card-sangat-baik-oktnov">
+            0
+          </div>
+        </div>
+
+        <!-- Card 10: Menurun (Okt→Nov) -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+          <div class="absolute -right-4 -bottom-4 text-red-50 opacity-10 group-hover:scale-110 transition-transform duration-500">
+            <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24"><path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-semibold text-slate-400 uppercase tracking-wide">📉 Menurun (Okt→Nov)</span>
+            <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-extrabold text-slate-900" id="card-menurun-oktnov">
+            0
+          </div>
+        </div>
+
+        <!-- Card 11: Sangat Baik (Nov→Des) -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+          <div class="absolute -right-4 -bottom-4 text-emerald-50 opacity-10 group-hover:scale-110 transition-transform duration-500">
+            <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-semibold text-slate-400 uppercase tracking-wide">📈 Sangat Baik (Nov→Des)</span>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-extrabold text-slate-900" id="card-sangat-baik-novdes">
+            0
+          </div>
+        </div>
+
+        <!-- Card 12: Menurun (Nov→Des) -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+          <div class="absolute -right-4 -bottom-4 text-red-50 opacity-10 group-hover:scale-110 transition-transform duration-500">
+            <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24"><path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-semibold text-slate-400 uppercase tracking-wide">📉 Menurun (Nov→Des)</span>
+            <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-extrabold text-slate-900" id="card-menurun-novdes">
+            0
+          </div>
+        </div>
+
+        <!-- ========== CARD ANALISA JUMLAH KANTOR (BARU) ========== -->
+        <!-- Card 13: Besar -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+          <div class="absolute -right-4 -bottom-4 text-blue-50 opacity-10 group-hover:scale-110 transition-transform duration-500">
+            <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          </div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-semibold text-slate-400 uppercase tracking-wide">🏢 Kategori Besar (>12 kantor)</span>
+            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-extrabold text-slate-900" id="card-kantor-besar">
+            0 perusahaan
+          </div>
+        </div>
+
+        <!-- Card 14: Menengah -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+          <div class="absolute -right-4 -bottom-4 text-amber-50 opacity-10 group-hover:scale-110 transition-transform duration-500">
+            <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          </div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-semibold text-slate-400 uppercase tracking-wide">🏢 Kategori Menengah (7–12 kantor)</span>
+            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-extrabold text-slate-900" id="card-kantor-menengah">
+            0 perusahaan
+          </div>
+        </div>
+
+        <!-- Card 15: Kecil -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+          <div class="absolute -right-4 -bottom-4 text-slate-50 opacity-10 group-hover:scale-110 transition-transform duration-500">
+            <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          </div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-semibold text-slate-400 uppercase tracking-wide">🏢 Kategori Kecil (<7 kantor)</span>
+            <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-extrabold text-slate-900" id="card-kantor-kecil">
+            0 perusahaan
+          </div>
+        </div>
+
       </section>
+
+      <!-- ===================== TOP RANKING SECTION ===================== -->
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
+        
+        <!-- Top 5 Terbesar -->
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 bg-gradient-to-r from-emerald-50 to-emerald-100/60 border-b border-emerald-200/50 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="text-lg">🏆</span>
+              <h3 class="font-bold text-slate-800">Top 5 Aset Terbesar (Desember)</h3>
+            </div>
+            <span class="text-xs font-semibold text-emerald-600 bg-emerald-200/60 px-3 py-1 rounded-full">↓ Terbesar</span>
+          </div>
+          <div class="divide-y divide-slate-100" id="top-ranking-terbesar">
+            <div class="px-6 py-8 text-center text-slate-400 text-sm">Memuat data...</div>
+          </div>
+        </div>
+
+        <!-- Top 5 Terkecil -->
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 bg-gradient-to-r from-rose-50 to-rose-100/60 border-b border-rose-200/50 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="text-lg">📉</span>
+              <h3 class="font-bold text-slate-800">Top 5 Aset Terkecil (Desember)</h3>
+            </div>
+            <span class="text-xs font-semibold text-rose-600 bg-rose-200/60 px-3 py-1 rounded-full">↑ Terkecil</span>
+          </div>
+          <div class="divide-y divide-slate-100" id="top-ranking-terkecil">
+            <div class="px-6 py-8 text-center text-slate-400 text-sm">Memuat data...</div>
+          </div>
+        </div>
+
+      </section>
+      <!-- =================== END TOP RANKING SECTION =================== -->
+
+      <!-- ===================== GRAFIK SECTION ===================== -->
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-slate-800">📊 Visualisasi Data</h3>
+          <span class="text-xs text-slate-400">Data real-time dari database</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- Grafik 1: Total Aset per Bulan -->
+          <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 chart-box">
+            <h4 class="font-semibold text-slate-700 mb-3 text-sm">Total Aset per Bulan (Rp)</h4>
+            <div class="chart-container">
+              <canvas id="chartTotalAset"></canvas>
+            </div>
+          </div>
+
+          <!-- Grafik 2: 10 Perusahaan dengan Aset Terbesar (Desember) -->
+          <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 chart-box">
+            <h4 class="font-semibold text-slate-700 mb-3 text-sm">Top 10 Perusahaan (Aset Desember)</h4>
+            <div class="chart-container">
+              <canvas id="chartTop10"></canvas>
+            </div>
+          </div>
+
+          <!-- Grafik 3: Distribusi Perusahaan berdasarkan Wilayah -->
+          <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 chart-box">
+            <h4 class="font-semibold text-slate-700 mb-3 text-sm">Distribusi Perusahaan per Wilayah</h4>
+            <div class="chart-container">
+              <canvas id="chartWilayah"></canvas>
+            </div>
+          </div>
+
+          <!-- Grafik 4: Distribusi Kategori Jumlah Kantor -->
+          <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 chart-box">
+            <h4 class="font-semibold text-slate-700 mb-3 text-sm">Distribusi Kategori Jumlah Kantor</h4>
+            <div class="chart-container">
+              <canvas id="chartKantor"></canvas>
+            </div>
+          </div>
+
+        </div>
+      </section>
+      <!-- =================== END GRAFIK SECTION =================== -->
+
+      <!-- ===================== INSIGHT OTOMATIS ===================== -->
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-slate-800">💡 Insight Otomatis</h3>
+          <span class="text-xs text-slate-400">Ringkasan cerdas dari data</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="insight-container">
+          <!-- Cards akan di-generate oleh JavaScript -->
+          <div class="col-span-full text-center text-slate-400 py-8 text-sm">Memuat insight...</div>
+        </div>
+      </section>
+      <!-- =================== END INSIGHT SECTION =================== -->
 
       <!-- 2. LAYOUT FORM INPUT & TABEL DATA -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -300,15 +711,20 @@
                     <th class="py-4 px-6 text-right min-w-[140px]">Aset Okt 2025</th>
                     <th class="py-4 px-6 text-right min-w-[140px]">Aset Nov 2025</th>
                     <th class="py-4 px-6 text-right min-w-[140px]">Aset Des 2025</th>
-                    <th class="py-4 px-6 text-center min-w-[110px]">Growth</th>
+                    <!-- Kolom Growth -->
+                    <th class="py-4 px-6 text-center min-w-[130px]">Growth Okt→Nov</th>
+                    <th class="py-4 px-6 text-center min-w-[130px]">Growth Nov→Des</th>
+                    <!-- Kolom Kantor -->
                     <th class="py-4 px-6 text-center min-w-[90px]">Kantor</th>
+                    <!-- Kolom Kategori Kantor (BARU) -->
+                    <th class="py-4 px-6 text-center min-w-[120px]">Kategori Kantor</th>
                     <th class="py-4 px-6 text-center min-w-[150px]">Aksi</th>
                   </tr>
                 </thead>
                 <tbody id="table-body" class="divide-y divide-slate-100 text-slate-700 text-sm">
                   <!-- Rendered dynamically -->
                   <tr>
-                    <td colspan="9" class="py-8 text-center text-slate-400">Memuat data...</td>
+                    <td colspan="11" class="py-8 text-center text-slate-400">Memuat data...</td>
                   </tr>
                 </tbody>
               </table>
@@ -356,6 +772,1114 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    // ============================================================
+    // STATE & DOM ELEMENTS
+    // ============================================================
+    let listPerusahaan = [];
+    let deleteTargetId = null;
+
+    let searchTerm = "";
+    let selectedWilayah = "";
+    let sortOption = "";
+    let currentPage = 1;
+    const itemsPerPage = 10;
+
+    // Chart instances untuk di-destroy saat update
+    let chartTotalAset = null;
+    let chartTop10 = null;
+    let chartWilayah = null;
+    let chartKantor = null;
+
+    const currentDateInfo = document.getElementById('current-date-info');
+
+    const cardTotalPerusahaan = document.getElementById('card-total-perusahaan');
+    const cardAsetOktober = document.getElementById('card-aset-oktober');
+    const cardAsetNovember = document.getElementById('card-aset-november');
+    const cardAsetDesember = document.getElementById('card-aset-desember');
+    const cardTotalKantor = document.getElementById('card-total-kantor');
+    const cardRataRataAset = document.getElementById('card-rata-rata-aset');
+
+    const tableBody = document.getElementById('table-body');
+    const filterSearch = document.getElementById('filter-search');
+    const filterWilayah = document.getElementById('filter-wilayah');
+    const sortAset = document.getElementById('sort-aset');
+    const paginationInfo = document.getElementById('pagination-info');
+    const paginationControls = document.getElementById('pagination-controls');
+
+    const formTitle = document.getElementById('form-title');
+    const formPerusahaan = document.getElementById('form-perusahaan');
+    const formId = document.getElementById('form-id');
+    const formPerusahaanName = document.getElementById('form-perusahaan-name');
+    const formWilayah = document.getElementById('form-wilayah');
+    const formAsetOktober = document.getElementById('form-aset-oktober');
+    const formAsetNovember = document.getElementById('form-aset-november');
+    const formAsetDesember = document.getElementById('form-aset-desember');
+    const formJumlahKantor = document.getElementById('form-jumlah-kantor');
+    const formError = document.getElementById('form-error');
+
+    const btnSubmitSimpan = document.getElementById('btn-submit-simpan');
+    const btnSubmitUpdate = document.getElementById('btn-submit-update');
+    const btnReset = document.getElementById('btn-reset');
+
+    const modalConfirm = document.getElementById('modal-confirm');
+    const btnCancelDelete = document.getElementById('btn-cancel-delete');
+    const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+
+    const skeletonSummary = document.getElementById('skeleton-summary');
+    const summaryCards = document.getElementById('summary-cards');
+
+    // ============================================================
+    // HELPER FUNCTIONS
+    // ============================================================
+    function formatRupiah(value) {
+      const formatter = new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+      return 'Rp ' + formatter.format(value);
+    }
+
+    function cleanNumber(str) {
+      if (!str) return 0;
+      return parseInt(str.toString().replace(/\D/g, '')) || 0;
+    }
+
+    function setupCurrencyInput(inputEl) {
+      inputEl.addEventListener('input', (e) => {
+        let clean = cleanNumber(e.target.value);
+        if (clean === 0) {
+          e.target.value = '';
+        } else {
+          e.target.value = new Intl.NumberFormat('id-ID').format(clean);
+        }
+      });
+    }
+
+    function updateDateDisplay() {
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const today = new Date();
+      currentDateInfo.textContent = today.toLocaleDateString('id-ID', options);
+    }
+
+    function showModal(modalEl) {
+      modalEl.classList.remove('pointer-events-none');
+      modalEl.classList.remove('opacity-0');
+      const box = modalEl.firstElementChild;
+      if (box) {
+        box.classList.remove('scale-95');
+        box.classList.add('scale-100');
+      }
+    }
+
+    function hideModal(modalEl) {
+      modalEl.classList.add('pointer-events-none');
+      modalEl.classList.add('opacity-0');
+      const box = modalEl.firstElementChild;
+      if (box) {
+        box.classList.remove('scale-100');
+        box.classList.add('scale-95');
+      }
+    }
+
+    // ============================================================
+    // API CALLS
+    // ============================================================
+    async function fetchPerusahaan() {
+      try {
+        // Tampilkan skeleton, sembunyikan cards
+        skeletonSummary.classList.remove('hidden');
+        summaryCards.classList.add('hidden');
+        
+        tableBody.innerHTML = `<tr><td colspan="11" class="py-8 text-center text-slate-400 font-semibold"><span class="inline-block animate-spin mr-2 border-2 border-t-blue-600 border-slate-200 w-4 h-4 rounded-full"></span>Memproses data...</td></tr>`;
+        
+        const res = await fetch('/api/perusahaan');
+        if (!res.ok) throw new Error("Gagal memuat data dari database");
+        listPerusahaan = await res.json();
+        
+        // Sembunyikan skeleton, tampilkan cards
+        skeletonSummary.classList.add('hidden');
+        summaryCards.classList.remove('hidden');
+        
+        populateWilayahDropdown();
+        renderDashboard();
+        renderProcessedData();
+      } catch (err) {
+        console.error(err);
+        skeletonSummary.classList.add('hidden');
+        summaryCards.classList.remove('hidden');
+        
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="11" class="py-8 text-center text-red-500 font-semibold">
+              <p class="mb-2">Gagal menyambung ke server database.</p>
+              <button onclick="fetchPerusahaan()" class="px-4 py-2 bg-blue-600 hover:bg-blue-750 text-white rounded-lg text-xs font-bold transition-all shadow-md">Coba Lagi</button>
+            </td>
+          </tr>`;
+      }
+    }
+
+    function populateWilayahDropdown() {
+      const currentSelected = filterWilayah.value;
+      const wilayahSet = new Set();
+      
+      listPerusahaan.forEach(p => {
+        if (p.wilayah && p.wilayah.trim()) {
+          wilayahSet.add(p.wilayah.trim());
+        }
+      });
+
+      const sortedWilayah = Array.from(wilayahSet).sort();
+      
+      filterWilayah.innerHTML = '<option value="">Semua Wilayah</option>' + 
+        sortedWilayah.map(w => `<option value="${w}">${w}</option>`).join('');
+
+      if (wilayahSet.has(currentSelected)) {
+        filterWilayah.value = currentSelected;
+      } else {
+        selectedWilayah = "";
+        filterWilayah.value = "";
+      }
+    }
+
+    // ============================================================
+    // RENDER DASHBOARD
+    // ============================================================
+    function renderDashboard() {
+      const totalPerusahaan = listPerusahaan.length;
+      
+      let totalOkt = 0, totalNov = 0, totalDes = 0, totalKantor = 0;
+      listPerusahaan.forEach(p => {
+        totalOkt += Number(p.asetOktober) || 0;
+        totalNov += Number(p.asetNovember) || 0;
+        totalDes += Number(p.asetDesember) || 0;
+        totalKantor += Number(p.jumlahKantor) || 0;
+      });
+
+      const totalAsetSemua = totalOkt + totalNov + totalDes;
+      const rataRata = totalPerusahaan > 0 ? totalAsetSemua / totalPerusahaan : 0;
+
+      cardTotalPerusahaan.textContent = `${totalPerusahaan} Perusahaan`;
+      cardAsetOktober.textContent = formatRupiah(totalOkt);
+      cardAsetNovember.textContent = formatRupiah(totalNov);
+      cardAsetDesember.textContent = formatRupiah(totalDes);
+      cardTotalKantor.textContent = `${totalKantor} Kantor`;
+      cardRataRataAset.textContent = formatRupiah(rataRata);
+
+      renderGrowthDashboard();
+      renderKantorDashboard();
+      renderTopRanking();
+      
+      // ========== RENDER GRAFIK ==========
+      renderCharts();
+
+      // ========== RENDER INSIGHT ==========
+      renderInsights();
+    }
+
+    // ============================================================
+    // GROWTH FUNCTIONS
+    // ============================================================
+    function calculateGrowth(prev, curr) {
+      if (!prev || prev === 0) return null;
+      return ((curr - prev) / prev) * 100;
+    }
+
+    function getGrowthCategory(growth) {
+      if (growth === null || isNaN(growth) || !isFinite(growth)) {
+        return { label: 'N/A', color: 'gray', bgColor: 'bg-slate-100', textColor: 'text-slate-500' };
+      }
+      if (growth > 5) {
+        return { label: 'Sangat Baik', color: 'green', bgColor: 'bg-emerald-100', textColor: 'text-emerald-700' };
+      }
+      if (growth >= 2) {
+        return { label: 'Baik', color: 'blue', bgColor: 'bg-blue-100', textColor: 'text-blue-700' };
+      }
+      if (growth >= 0) {
+        return { label: 'Stabil', color: 'yellow', bgColor: 'bg-amber-100', textColor: 'text-amber-700' };
+      }
+      return { label: 'Menurun', color: 'red', bgColor: 'bg-red-100', textColor: 'text-red-700' };
+    }
+
+    function formatGrowth(growth) {
+      if (growth === null || isNaN(growth) || !isFinite(growth)) return '-';
+      const sign = growth > 0 ? '+' : '';
+      return `${sign}${growth.toFixed(1)}%`;
+    }
+
+    function calculateGrowthStats(data) {
+      let totalGrowthOktNov = 0, totalGrowthNovDes = 0;
+      let countOktNov = 0, countNovDes = 0;
+      let categories = {
+        'Sangat Baik': { oktNov: 0, novDes: 0 },
+        'Baik': { oktNov: 0, novDes: 0 },
+        'Stabil': { oktNov: 0, novDes: 0 },
+        'Menurun': { oktNov: 0, novDes: 0 },
+        'N/A': { oktNov: 0, novDes: 0 }
+      };
+
+      data.forEach(p => {
+        const gOktNov = calculateGrowth(Number(p.asetOktober) || 0, Number(p.asetNovember) || 0);
+        const gNovDes = calculateGrowth(Number(p.asetNovember) || 0, Number(p.asetDesember) || 0);
+
+        if (gOktNov !== null && isFinite(gOktNov)) {
+          totalGrowthOktNov += gOktNov;
+          countOktNov++;
+        }
+        if (gNovDes !== null && isFinite(gNovDes)) {
+          totalGrowthNovDes += gNovDes;
+          countNovDes++;
+        }
+
+        const catOktNov = getGrowthCategory(gOktNov);
+        const catNovDes = getGrowthCategory(gNovDes);
+        categories[catOktNov.label].oktNov++;
+        categories[catNovDes.label].novDes++;
+      });
+
+      return {
+        avgOktNov: countOktNov > 0 ? totalGrowthOktNov / countOktNov : null,
+        avgNovDes: countNovDes > 0 ? totalGrowthNovDes / countNovDes : null,
+        categories,
+        totalData: data.length
+      };
+    }
+
+    function renderGrowthDashboard() {
+      const stats = calculateGrowthStats(listPerusahaan);
+
+      const avgOktNovEl = document.getElementById('card-avg-growth-oktnov');
+      const avgNovDesEl = document.getElementById('card-avg-growth-novdes');
+      
+      if (avgOktNovEl) {
+        avgOktNovEl.textContent = stats.avgOktNov !== null ? formatGrowth(stats.avgOktNov) : '-';
+        if (stats.avgOktNov !== null) {
+          const cat = getGrowthCategory(stats.avgOktNov);
+          avgOktNovEl.className = `text-2xl font-extrabold tracking-tight ${cat.textColor}`;
+        }
+      }
+      if (avgNovDesEl) {
+        avgNovDesEl.textContent = stats.avgNovDes !== null ? formatGrowth(stats.avgNovDes) : '-';
+        if (stats.avgNovDes !== null) {
+          const cat = getGrowthCategory(stats.avgNovDes);
+          avgNovDesEl.className = `text-2xl font-extrabold tracking-tight ${cat.textColor}`;
+        }
+      }
+
+      const elSangatBaikOktNov = document.getElementById('card-sangat-baik-oktnov');
+      const elMenurunOktNov = document.getElementById('card-menurun-oktnov');
+      const elSangatBaikNovDes = document.getElementById('card-sangat-baik-novdes');
+      const elMenurunNovDes = document.getElementById('card-menurun-novdes');
+
+      if (elSangatBaikOktNov) elSangatBaikOktNov.textContent = stats.categories['Sangat Baik'].oktNov + ' perusahaan';
+      if (elMenurunOktNov) elMenurunOktNov.textContent = stats.categories['Menurun'].oktNov + ' perusahaan';
+      if (elSangatBaikNovDes) elSangatBaikNovDes.textContent = stats.categories['Sangat Baik'].novDes + ' perusahaan';
+      if (elMenurunNovDes) elMenurunNovDes.textContent = stats.categories['Menurun'].novDes + ' perusahaan';
+    }
+
+    // ============================================================
+    // KANTOR FUNCTIONS
+    // ============================================================
+    function getKantorCategory(jumlah) {
+      if (jumlah > 12) {
+        return { label: 'Besar', color: 'blue', bgColor: 'bg-blue-100', textColor: 'text-blue-700' };
+      } else if (jumlah >= 7 && jumlah <= 12) {
+        return { label: 'Menengah', color: 'yellow', bgColor: 'bg-amber-100', textColor: 'text-amber-700' };
+      } else {
+        return { label: 'Kecil', color: 'gray', bgColor: 'bg-slate-100', textColor: 'text-slate-600' };
+      }
+    }
+
+    function calculateKantorStats(data) {
+      let besar = 0, menengah = 0, kecil = 0;
+      data.forEach(p => {
+        const jml = Number(p.jumlahKantor) || 0;
+        if (jml > 12) besar++;
+        else if (jml >= 7 && jml <= 12) menengah++;
+        else kecil++;
+      });
+      return { besar, menengah, kecil, total: data.length };
+    }
+
+    function renderKantorDashboard() {
+      const stats = calculateKantorStats(listPerusahaan);
+      const elBesar = document.getElementById('card-kantor-besar');
+      const elMenengah = document.getElementById('card-kantor-menengah');
+      const elKecil = document.getElementById('card-kantor-kecil');
+      if (elBesar) elBesar.textContent = stats.besar + ' perusahaan';
+      if (elMenengah) elMenengah.textContent = stats.menengah + ' perusahaan';
+      if (elKecil) elKecil.textContent = stats.kecil + ' perusahaan';
+    }
+
+    // ============================================================
+    // TOP RANKING
+    // ============================================================
+    function renderTopRanking() {
+      const containerBesar = document.getElementById('top-ranking-terbesar');
+      const containerKecil = document.getElementById('top-ranking-terkecil');
+
+      const withData = listPerusahaan.filter(p => (Number(p.asetDesember) || 0) > 0);
+      
+      if (withData.length === 0) {
+        containerBesar.innerHTML = `<div class="px-6 py-8 text-center text-slate-400 text-sm">Belum ada data aset Desember.</div>`;
+        containerKecil.innerHTML = `<div class="px-6 py-8 text-center text-slate-400 text-sm">Belum ada data aset Desember.</div>`;
+        return;
+      }
+
+      const sortedByDes = [...withData].sort((a, b) => (Number(b.asetDesember) || 0) - (Number(a.asetDesember) || 0));
+      const top5Besar = sortedByDes.slice(0, 5);
+      const top5Kecil = sortedByDes.slice(-5).reverse();
+
+      containerBesar.innerHTML = top5Besar.map((item, index) => {
+        const rank = index + 1;
+        const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'default';
+        const aset = Number(item.asetDesember) || 0;
+        return `
+          <div class="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50 transition-colors duration-150 top-rank-card">
+            <div class="flex items-center space-x-3 min-w-0">
+              <span class="rank-badge ${rankClass}">${rank}</span>
+              <div class="min-w-0">
+                <p class="font-bold text-slate-800 text-sm truncate">${item.perusahaan}</p>
+                <p class="text-xs text-slate-400 truncate">${item.wilayah}</p>
+              </div>
+            </div>
+            <div class="text-right flex-shrink-0 ml-3">
+              <span class="font-extrabold text-slate-800 text-sm">${formatRupiah(aset)}</span>
+              ${rank === 1 ? '<span class="ml-1.5 text-xs">👑</span>' : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      containerKecil.innerHTML = top5Kecil.map((item, index) => {
+        const rank = index + 1;
+        const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'default';
+        const aset = Number(item.asetDesember) || 0;
+        return `
+          <div class="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50 transition-colors duration-150 top-rank-card">
+            <div class="flex items-center space-x-3 min-w-0">
+              <span class="rank-badge ${rankClass}">${rank}</span>
+              <div class="min-w-0">
+                <p class="font-bold text-slate-800 text-sm truncate">${item.perusahaan}</p>
+                <p class="text-xs text-slate-400 truncate">${item.wilayah}</p>
+              </div>
+            </div>
+            <div class="text-right flex-shrink-0 ml-3">
+              <span class="font-extrabold text-slate-800 text-sm">${formatRupiah(aset)}</span>
+              ${rank === 1 ? '<span class="ml-1.5 text-xs">⚠️</span>' : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ============================================================
+    // ================ GRAFIK DENGAN CHART.JS ====================
+    // ============================================================
+    function renderCharts() {
+      // Destroy chart sebelumnya untuk menghindari duplikasi
+      if (chartTotalAset) { chartTotalAset.destroy(); chartTotalAset = null; }
+      if (chartTop10) { chartTop10.destroy(); chartTop10 = null; }
+      if (chartWilayah) { chartWilayah.destroy(); chartWilayah = null; }
+      if (chartKantor) { chartKantor.destroy(); chartKantor = null; }
+
+      if (listPerusahaan.length === 0) {
+        // Jika belum ada data, tampilkan pesan di canvas (opsional)
+        return;
+      }
+
+      // ---------- 1. GRAFIK TOTAL ASET PER BULAN ----------
+      const ctx1 = document.getElementById('chartTotalAset').getContext('2d');
+      let totalOkt = 0, totalNov = 0, totalDes = 0;
+      listPerusahaan.forEach(p => {
+        totalOkt += Number(p.asetOktober) || 0;
+        totalNov += Number(p.asetNovember) || 0;
+        totalDes += Number(p.asetDesember) || 0;
+      });
+
+      chartTotalAset = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: ['Oktober 2025', 'November 2025', 'Desember 2025'],
+          datasets: [{
+            label: 'Total Aset',
+            data: [totalOkt, totalNov, totalDes],
+            backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981'],
+            borderRadius: 6,
+            borderSkipped: false,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return formatRupiah(context.parsed.y);
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return 'Rp ' + (value / 1000000).toFixed(1) + 'M';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // ---------- 2. GRAFIK 10 PERUSAHAAN DENGAN ASET TERBESAR (DESEMBER) ----------
+      const ctx2 = document.getElementById('chartTop10').getContext('2d');
+      const sortedByDes = [...listPerusahaan].sort((a, b) => (Number(b.asetDesember) || 0) - (Number(a.asetDesember) || 0));
+      const top10 = sortedByDes.slice(0, 10);
+      const labelsTop10 = top10.map(p => p.perusahaan);
+      const dataTop10 = top10.map(p => Number(p.asetDesember) || 0);
+
+      const colors = ['#3b82f6', '#60a5fa', '#93c5fd', '#8b5cf6', '#a78bfa', '#c084fc', '#10b981', '#34d399', '#6ee7b7', '#f59e0b'];
+
+      chartTop10 = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: labelsTop10,
+          datasets: [{
+            label: 'Aset Desember 2025',
+            data: dataTop10,
+            backgroundColor: colors.slice(0, top10.length),
+            borderRadius: 6,
+            borderSkipped: false,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y', // horizontal bar
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return formatRupiah(context.parsed.x);
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return 'Rp ' + (value / 1000000).toFixed(1) + 'M';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // ---------- 3. GRAFIK DISTRIBUSI PERUSAHAAN PER WILAYAH ----------
+      const ctx3 = document.getElementById('chartWilayah').getContext('2d');
+      const wilayahMap = {};
+      listPerusahaan.forEach(p => {
+        const w = p.wilayah || 'Tidak Diketahui';
+        wilayahMap[w] = (wilayahMap[w] || 0) + 1;
+      });
+      const wilayahLabels = Object.keys(wilayahMap);
+      const wilayahData = Object.values(wilayahMap);
+      const colorsWilayah = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#14b8a6', '#f472b6', '#8b5cf6'];
+
+      chartWilayah = new Chart(ctx3, {
+        type: 'pie',
+        data: {
+          labels: wilayahLabels,
+          datasets: [{
+            data: wilayahData,
+            backgroundColor: colorsWilayah.slice(0, wilayahLabels.length),
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                font: {
+                  size: 10
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // ---------- 4. GRAFIK DISTRIBUSI KATEGORI JUMLAH KANTOR ----------
+      const ctx4 = document.getElementById('chartKantor').getContext('2d');
+      const kantorStats = calculateKantorStats(listPerusahaan);
+      const kantorLabels = ['Besar (>12)', 'Menengah (7-12)', 'Kecil (<7)'];
+      const kantorData = [kantorStats.besar, kantorStats.menengah, kantorStats.kecil];
+      const colorsKantor = ['#3b82f6', '#f59e0b', '#94a3b8'];
+
+      chartKantor = new Chart(ctx4, {
+        type: 'doughnut',
+        data: {
+          labels: kantorLabels,
+          datasets: [{
+            data: kantorData,
+            backgroundColor: colorsKantor,
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                font: {
+                  size: 10
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ============================================================
+    // ================ INSIGHT OTOMATIS ===========================
+    // ============================================================
+    function renderInsights() {
+      const container = document.getElementById('insight-container');
+      
+      if (listPerusahaan.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full empty-state-wrapper">
+            <div class="empty-state-icon mb-3">📭</div>
+            <p class="text-slate-600 font-medium text-sm">Belum ada data perusahaan</p>
+            <p class="text-slate-400 text-xs mt-1">Tambahkan data melalui form di samping untuk mulai menganalisis</p>
+          </div>
+        `;
+        return;
+      }
+
+      // === Kumpulkan data ===
+      const total = listPerusahaan.length;
+      
+      // Total aset per bulan
+      let totalOkt = 0, totalNov = 0, totalDes = 0;
+      listPerusahaan.forEach(p => {
+        totalOkt += Number(p.asetOktober) || 0;
+        totalNov += Number(p.asetNovember) || 0;
+        totalDes += Number(p.asetDesember) || 0;
+      });
+
+      // Growth total aset
+      const growthOktNov = totalOkt > 0 ? ((totalNov - totalOkt) / totalOkt) * 100 : null;
+      const growthNovDes = totalNov > 0 ? ((totalDes - totalNov) / totalNov) * 100 : null;
+
+      // Wilayah terbanyak
+      const wilayahMap = {};
+      listPerusahaan.forEach(p => {
+        const w = p.wilayah || 'Tidak Diketahui';
+        wilayahMap[w] = (wilayahMap[w] || 0) + 1;
+      });
+      let wilayahTerbanyak = '';
+      let maxWilayah = 0;
+      for (const [w, count] of Object.entries(wilayahMap)) {
+        if (count > maxWilayah) {
+          maxWilayah = count;
+          wilayahTerbanyak = w;
+        }
+      }
+
+      // Perusahaan dengan aset terbesar (Desember)
+      const sortedByDes = [...listPerusahaan].sort((a, b) => (Number(b.asetDesember) || 0) - (Number(a.asetDesember) || 0));
+      const asetTerbesar = sortedByDes[0];
+      const asetTerbesarValue = Number(asetTerbesar.asetDesember) || 0;
+
+      // Perusahaan dengan pertumbuhan tertinggi (Nov→Des)
+      let growthTertinggi = -Infinity;
+      let perusahaanGrowthTertinggi = null;
+      listPerusahaan.forEach(p => {
+        const prev = Number(p.asetNovember) || 0;
+        const curr = Number(p.asetDesember) || 0;
+        if (prev > 0) {
+          const g = ((curr - prev) / prev) * 100;
+          if (g > growthTertinggi) {
+            growthTertinggi = g;
+            perusahaanGrowthTertinggi = p;
+          }
+        }
+      });
+
+      // Rata-rata aset
+      const totalAsetSemua = totalOkt + totalNov + totalDes;
+      const rataRata = total > 0 ? totalAsetSemua / total : 0;
+
+      // Distribusi kategori kantor
+      const kantorStats = calculateKantorStats(listPerusahaan);
+      const totalKantor = kantorStats.besar + kantorStats.menengah + kantorStats.kecil;
+
+      // === Bangun array insight cards ===
+      const insights = [];
+
+      // 1. Total perusahaan
+      insights.push({
+        icon: '🏢',
+        label: 'Total Perusahaan',
+        value: total + ' perusahaan',
+        sub: 'Data dianalisis',
+        color: 'blue'
+      });
+
+      // 2. Growth Okt→Nov
+      let growthText = '-';
+      let growthColor = 'slate';
+      if (growthOktNov !== null) {
+        const sign = growthOktNov > 0 ? '+' : '';
+        growthText = sign + growthOktNov.toFixed(1) + '%';
+        growthColor = growthOktNov > 0 ? 'emerald' : growthOktNov < 0 ? 'red' : 'amber';
+      }
+      insights.push({
+        icon: '📈',
+        label: 'Kenaikan Aset Okt→Nov',
+        value: growthText,
+        sub: growthOktNov !== null ? 'Dari total aset' : 'Data tidak cukup',
+        color: growthColor
+      });
+
+      // 3. Growth Nov→Des
+      let growthText2 = '-';
+      let growthColor2 = 'slate';
+      if (growthNovDes !== null) {
+        const sign = growthNovDes > 0 ? '+' : '';
+        growthText2 = sign + growthNovDes.toFixed(1) + '%';
+        growthColor2 = growthNovDes > 0 ? 'emerald' : growthNovDes < 0 ? 'red' : 'amber';
+      }
+      insights.push({
+        icon: '📈',
+        label: 'Kenaikan Aset Nov→Des',
+        value: growthText2,
+        sub: growthNovDes !== null ? 'Dari total aset' : 'Data tidak cukup',
+        color: growthColor2
+      });
+
+      // 4. Wilayah terbanyak
+      insights.push({
+        icon: '📍',
+        label: 'Wilayah Terbanyak',
+        value: wilayahTerbanyak || '-',
+        sub: maxWilayah > 0 ? maxWilayah + ' perusahaan' : 'Tidak ada data',
+        color: 'indigo'
+      });
+
+      // 5. Perusahaan aset terbesar
+      insights.push({
+        icon: '👑',
+        label: 'Aset Terbesar (Des)',
+        value: asetTerbesar ? asetTerbesar.perusahaan : '-',
+        sub: asetTerbesar ? formatRupiah(asetTerbesarValue) : 'Tidak ada data',
+        color: 'amber'
+      });
+
+      // 6. Pertumbuhan tertinggi
+      let growthTertinggiText = '-';
+      let growthTertinggiName = '-';
+      if (perusahaanGrowthTertinggi) {
+        growthTertinggiText = formatGrowth(growthTertinggi);
+        growthTertinggiName = perusahaanGrowthTertinggi.perusahaan;
+      }
+      insights.push({
+        icon: '🚀',
+        label: 'Growth Tertinggi (Nov→Des)',
+        value: growthTertinggiName,
+        sub: growthTertinggiText,
+        color: 'emerald'
+      });
+
+      // 7. Rata-rata aset
+      insights.push({
+        icon: '📊',
+        label: 'Rata-rata Aset',
+        value: formatRupiah(rataRata),
+        sub: 'Seluruh perusahaan',
+        color: 'purple'
+      });
+
+      // 8. Distribusi kategori kantor
+      const distribusiText = `Besar ${kantorStats.besar}, Menengah ${kantorStats.menengah}, Kecil ${kantorStats.kecil}`;
+      insights.push({
+        icon: '🏗️',
+        label: 'Distribusi Kategori Kantor',
+        value: distribusiText,
+        sub: totalKantor > 0 ? 'Total ' + totalKantor + ' perusahaan' : 'Tidak ada data',
+        color: 'orange'
+      });
+
+      // === Render ke DOM ===
+      const colorMap = {
+        blue: { border: 'border-blue-500', bg: 'bg-blue-50', icon: 'text-blue-600' },
+        emerald: { border: 'border-emerald-500', bg: 'bg-emerald-50', icon: 'text-emerald-600' },
+        red: { border: 'border-red-500', bg: 'bg-red-50', icon: 'text-red-600' },
+        amber: { border: 'border-amber-500', bg: 'bg-amber-50', icon: 'text-amber-600' },
+        indigo: { border: 'border-indigo-500', bg: 'bg-indigo-50', icon: 'text-indigo-600' },
+        purple: { border: 'border-purple-500', bg: 'bg-purple-50', icon: 'text-purple-600' },
+        orange: { border: 'border-orange-500', bg: 'bg-orange-50', icon: 'text-orange-600' },
+        slate: { border: 'border-slate-400', bg: 'bg-slate-50', icon: 'text-slate-600' }
+      };
+
+      container.innerHTML = insights.map(insight => {
+        const colors = colorMap[insight.color] || colorMap.slate;
+        return `
+          <div class="insight-card bg-white rounded-xl p-4 shadow-sm border-t-4 ${colors.border} hover:shadow-md">
+            <div class="flex items-start space-x-3">
+              <div class="insight-icon ${colors.bg} ${colors.icon} text-lg">
+                ${insight.icon}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="insight-label">${insight.label}</div>
+                <div class="insight-value truncate" title="${insight.value}">${insight.value}</div>
+                <div class="insight-sub">${insight.sub}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ============================================================
+    // RENDER TABLE & PAGINATION
+    // ============================================================
+    function renderProcessedData() {
+      let processed = [...listPerusahaan];
+
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        processed = processed.filter(p => p.perusahaan && p.perusahaan.toLowerCase().includes(term));
+      }
+
+      if (selectedWilayah) {
+        processed = processed.filter(p => p.wilayah === selectedWilayah);
+      }
+
+      if (sortOption) {
+        const [column, direction] = sortOption.split('-');
+        const multiplier = direction === 'asc' ? 1 : -1;
+        processed.sort((a, b) => {
+          let valA = 0, valB = 0;
+          if (column === 'okt') {
+            valA = a.asetOktober || 0;
+            valB = b.asetOktober || 0;
+          } else if (column === 'nov') {
+            valA = a.asetNovember || 0;
+            valB = b.asetNovember || 0;
+          } else if (column === 'des') {
+            valA = a.asetDesember || 0;
+            valB = b.asetDesember || 0;
+          }
+          return (valA - valB) * multiplier;
+        });
+      }
+
+      const totalFilteredItems = processed.length;
+      const totalPages = Math.ceil(totalFilteredItems / itemsPerPage) || 1;
+
+      if (currentPage > totalPages) {
+        currentPage = totalPages;
+      }
+
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, totalFilteredItems);
+      const paginatedData = processed.slice(startIndex, endIndex);
+
+      renderTableRows(paginatedData, startIndex);
+      renderPaginationInfo(startIndex, endIndex, totalFilteredItems);
+      renderPaginationControls(totalPages);
+    }
+
+    function renderTableRows(data, startIndex) {
+      if (data.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="11" class="py-12 text-center text-slate-400">
+              <div class="flex flex-col items-center justify-center space-y-2">
+                <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <p class="font-medium text-sm">Data tidak ditemukan.</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tableBody.innerHTML = data.map((p, idx) => {
+        const globalIndex = startIndex + idx + 1;
+        const asetOkt = Number(p.asetOktober) || 0;
+        const asetNov = Number(p.asetNovember) || 0;
+        const asetDes = Number(p.asetDesember) || 0;
+        
+        const growthOktNov = calculateGrowth(asetOkt, asetNov);
+        const growthNovDes = calculateGrowth(asetNov, asetDes);
+        const catOktNov = getGrowthCategory(growthOktNov);
+        const catNovDes = getGrowthCategory(growthNovDes);
+        const kantorCat = getKantorCategory(Number(p.jumlahKantor) || 0);
+
+        return `
+          <tr class="hover:bg-slate-50 transition-colors duration-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}">
+            <td class="py-4 px-6 text-center font-semibold text-slate-500">${globalIndex}</td>
+            <td class="py-4 px-6 font-bold text-slate-800">${p.perusahaan}</td>
+            <td class="py-4 px-6 text-slate-650">${p.wilayah}</td>
+            <td class="py-4 px-6 text-right font-semibold text-slate-700">${formatRupiah(asetOkt)}</td>
+            <td class="py-4 px-6 text-right font-semibold text-slate-700">${formatRupiah(asetNov)}</td>
+            <td class="py-4 px-6 text-right font-semibold text-slate-700">${formatRupiah(asetDes)}</td>
+            <td class="py-4 px-6 text-center">
+              <div class="inline-flex flex-col items-center">
+                <span class="font-bold ${catOktNov.textColor}">${formatGrowth(growthOktNov)}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full ${catOktNov.bgColor} ${catOktNov.textColor} font-medium">${catOktNov.label}</span>
+              </div>
+            </td>
+            <td class="py-4 px-6 text-center">
+              <div class="inline-flex flex-col items-center">
+                <span class="font-bold ${catNovDes.textColor}">${formatGrowth(growthNovDes)}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full ${catNovDes.bgColor} ${catNovDes.textColor} font-medium">${catNovDes.label}</span>
+              </div>
+            </td>
+            <td class="py-4 px-6 text-center font-semibold text-slate-700">${p.jumlahKantor}</td>
+            <td class="py-4 px-6 text-center">
+              <span class="text-xs px-3 py-1 rounded-full font-semibold ${kantorCat.bgColor} ${kantorCat.textColor}">
+                ${kantorCat.label}
+              </span>
+            </td>
+            <td class="py-4 px-6 text-center">
+              <div class="flex items-center justify-center space-x-2">
+                <button onclick="editData(${p.no})" class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors text-xs font-semibold">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                  <span>Edit</span>
+                </button>
+                <button onclick="confirmHapus(${p.no})" class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-red-200 text-red-650 hover:bg-red-50 transition-colors text-xs font-semibold">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                  <span>Hapus</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderPaginationInfo(start, end, total) {
+      if (total === 0) {
+        paginationInfo.textContent = "Menampilkan 0–0 dari 0 data";
+      } else {
+        paginationInfo.textContent = `Menampilkan ${start + 1}–${end} dari ${total} data`;
+      }
+    }
+
+    function renderPaginationControls(totalPages) {
+      let html = "";
+      html += `
+        <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${currentPage === 1 ? 'text-slate-300 border-slate-100 bg-slate-50 cursor-not-allowed' : 'text-slate-650 border-slate-200 hover:bg-slate-50'}">
+          Sebelumnya
+        </button>
+      `;
+      for (let i = 1; i <= totalPages; i++) {
+        const isActive = i === currentPage;
+        html += `
+          <button onclick="changePage(${i})" class="w-8 h-8 rounded-lg text-xs font-bold transition-all ${isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' : 'border border-slate-200 text-slate-650 hover:bg-slate-50'}">
+            ${i}
+          </button>
+        `;
+      }
+      html += `
+        <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${currentPage === totalPages ? 'text-slate-300 border-slate-100 bg-slate-50 cursor-not-allowed' : 'text-slate-650 border-slate-200 hover:bg-slate-50'}">
+          Berikutnya
+        </button>
+      `;
+      paginationControls.innerHTML = html;
+    }
+
+    window.changePage = function(targetPage) {
+      currentPage = targetPage;
+      renderProcessedData();
+    };
+
+    // ============================================================
+    // CRUD FORM
+    // ============================================================
+    function resetForm() {
+      formPerusahaan.reset();
+      formId.value = "";
+      formTitle.textContent = "Tambah Data Perusahaan";
+      formError.classList.add('hidden');
+      formError.textContent = "";
+      btnSubmitSimpan.classList.remove('hidden');
+      btnSubmitUpdate.classList.add('hidden');
+    }
+
+    function getFormData() {
+      const name = formPerusahaanName.value.trim();
+      const wilayah = formWilayah.value.trim();
+      const okt = cleanNumber(formAsetOktober.value);
+      const nov = cleanNumber(formAsetNovember.value);
+      const des = cleanNumber(formAsetDesember.value);
+      const kantor = parseInt(formJumlahKantor.value) || 0;
+
+      if (!name || !wilayah) {
+        formError.textContent = "Nama perusahaan dan wilayah wajib diisi!";
+        formError.classList.remove('hidden');
+        return null;
+      }
+
+      return {
+        perusahaan: name,
+        wilayah: wilayah,
+        asetOktober: okt,
+        asetNovember: nov,
+        asetDesember: des,
+        jumlahKantor: kantor
+      };
+    }
+
+    async function submitSimpan() {
+      const payload = getFormData();
+      if (!payload) return;
+
+      try {
+        const res = await fetch('/api/perusahaan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errRes = await res.json();
+          throw new Error(errRes.error || "Gagal menyimpan data ke server");
+        }
+
+        resetForm();
+        await fetchPerusahaan();
+      } catch (err) {
+        formError.textContent = err.message;
+        formError.classList.remove('hidden');
+      }
+    }
+
+    async function submitUpdate() {
+      const id = formId.value;
+      const payload = getFormData();
+      if (!payload || !id) return;
+
+      try {
+        const res = await fetch(`/api/perusahaan/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errRes = await res.json();
+          throw new Error(errRes.error || "Gagal memperbarui data");
+        }
+
+        resetForm();
+        await fetchPerusahaan();
+      } catch (err) {
+        formError.textContent = err.message;
+        formError.classList.remove('hidden');
+      }
+    }
+
+    window.editData = function(no) {
+      const item = listPerusahaan.find(p => p.no === no);
+      if (!item) return;
+
+      formTitle.textContent = "Edit Data Perusahaan";
+      formId.value = item.no;
+      formPerusahaanName.value = item.perusahaan;
+      formWilayah.value = item.wilayah;
+      formAsetOktober.value = item.asetOktober ? new Intl.NumberFormat('id-ID').format(item.asetOktober) : '';
+      formAsetNovember.value = item.asetNovember ? new Intl.NumberFormat('id-ID').format(item.asetNovember) : '';
+      formAsetDesember.value = item.asetDesember ? new Intl.NumberFormat('id-ID').format(item.asetDesember) : '';
+      formJumlahKantor.value = item.jumlahKantor;
+
+      formError.classList.add('hidden');
+      btnSubmitSimpan.classList.add('hidden');
+      btnSubmitUpdate.classList.remove('hidden');
+      formPerusahaan.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.confirmHapus = function(id) {
+      deleteTargetId = id;
+      showModal(modalConfirm);
+    };
+
+    // ============================================================
+    // EVENT LISTENERS
+    // ============================================================
+    filterSearch.addEventListener('input', (e) => {
+      searchTerm = e.target.value;
+      currentPage = 1;
+      renderProcessedData();
+    });
+
+    filterWilayah.addEventListener('change', (e) => {
+      selectedWilayah = e.target.value;
+      currentPage = 1;
+      renderProcessedData();
+    });
+
+    sortAset.addEventListener('change', (e) => {
+      sortOption = e.target.value;
+      renderProcessedData();
+    });
+
+    btnSubmitSimpan.addEventListener('click', submitSimpan);
+    btnSubmitUpdate.addEventListener('click', submitUpdate);
+    btnReset.addEventListener('click', resetForm);
+
+    btnCancelDelete.addEventListener('click', () => {
+      deleteTargetId = null;
+      hideModal(modalConfirm);
+    });
+
+    btnConfirmDelete.addEventListener('click', async () => {
+      if (!deleteTargetId) return;
+      try {
+        const res = await fetch(`/api/perusahaan/${deleteTargetId}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok) throw new Error("Gagal menghapus data dari database");
+        hideModal(modalConfirm);
+        deleteTargetId = null;
+        await fetchPerusahaan();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    setupCurrencyInput(formAsetOktober);
+    setupCurrencyInput(formAsetNovember);
+    setupCurrencyInput(formAsetDesember);
+
+    updateDateDisplay();
+    fetchPerusahaan();
+  </script>
 </body>
 </html>
